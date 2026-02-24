@@ -1,10 +1,20 @@
 ﻿import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { analyzeJobDescription } from "../lib/analysisEngine";
+import { analyzeJobDescription, calculateLiveReadinessScore } from "../lib/analysisEngine";
 import { saveAnalysisEntry } from "../lib/analysisStorage";
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function buildDefaultSkillConfidenceMap(extractedSkills) {
+  const map = {};
+  extractedSkills.forEach((group) => {
+    group.skills.forEach((skill) => {
+      map[skill] = "practice";
+    });
+  });
+  return map;
 }
 
 function PracticePage() {
@@ -27,6 +37,8 @@ function PracticePage() {
     event.preventDefault();
 
     const analysis = analyzeJobDescription({ company, role, jdText });
+    const skillConfidenceMap = buildDefaultSkillConfidenceMap(analysis.extractedSkills);
+    const liveReadinessScore = calculateLiveReadinessScore(analysis.readinessScore, skillConfidenceMap);
 
     const entry = {
       id: makeId(),
@@ -38,7 +50,9 @@ function PracticePage() {
       plan: analysis.plan,
       checklist: analysis.checklist,
       questions: analysis.questions,
-      readinessScore: analysis.readinessScore,
+      baseReadinessScore: analysis.readinessScore,
+      readinessScore: liveReadinessScore,
+      skillConfidenceMap,
     };
 
     saveAnalysisEntry(entry);

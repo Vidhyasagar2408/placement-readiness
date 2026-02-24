@@ -514,3 +514,42 @@ p {
   gap: var(--space-16);
   flex-wrap: wrap;
 }
+
+.skill-tag--interactive {
+  display: grid;
+  gap: var(--space-8);
+  min-width: 220px;
+  background: #f8f7ff;
+}
+
+.confidence-toggle {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+
+.confidence-btn {
+  border: var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: #ffffff;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.confidence-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.confidence-btn:hover {
+  border-color: rgba(79, 70, 229, 0.45);
+}
+
+.action-next-box {
+  border-color: rgba(79, 70, 229, 0.35);
+  background: #f8f7ff;
+}

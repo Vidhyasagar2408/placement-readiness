@@ -354,6 +354,23 @@ export function calculateReadinessScore({ matchedCategoryCount, company, role, j
   return Math.min(score, 100);
 }
 
+export function calculateLiveReadinessScore(baseReadinessScore, skillConfidenceMap = {}) {
+  const safeBase = Number.isFinite(baseReadinessScore) ? baseReadinessScore : 0;
+  const adjustment = Object.values(skillConfidenceMap).reduce((sum, state) => {
+    if (state === "know") {
+      return sum + 2;
+    }
+
+    if (state === "practice") {
+      return sum - 2;
+    }
+
+    return sum;
+  }, 0);
+
+  return Math.max(0, Math.min(100, safeBase + adjustment));
+}
+
 export function analyzeJobDescription({ company, role, jdText }) {
   const extraction = extractSkillsFromJD(jdText);
   const checklist = buildRoundChecklist(extraction.groupedSkills, extraction.matchedSkillsFlat);

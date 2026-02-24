@@ -59,3 +59,9 @@ export function saveAnalysisEntry(entry) {
   localStorage.setItem(LATEST_ID_KEY, entry.id);
   localStorage.setItem(SELECTED_ID_KEY, entry.id);
 }
+
+export function updateAnalysisEntry(entryId, patch) {
+  const history = getAnalysisHistory();
+  const nextHistory = history.map((entry) => (entry.id === entryId ? { ...entry, ...patch } : entry));
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(nextHistory));
+}

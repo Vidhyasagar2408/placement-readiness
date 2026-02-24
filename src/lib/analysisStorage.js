@@ -1,23 +1,49 @@
-﻿const HISTORY_KEY = "prp_analysis_history";
+﻿import { normalizeAnalysisEntry } from "./analysisSchema";
+
+const HISTORY_KEY = "prp_analysis_history";
 const SELECTED_ID_KEY = "prp_selected_analysis_id";
 const LATEST_ID_KEY = "prp_latest_analysis_id";
 
-function readJson(key, fallback) {
+function loadHistoryState() {
+  const raw = localStorage.getItem(HISTORY_KEY);
+  if (!raw) {
+    return { entries: [], hadCorrupted: false };
+  }
+
   try {
-    const raw = localStorage.getItem(key);
-    if (!raw) {
-      return fallback;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return { entries: [], hadCorrupted: true };
     }
 
-    return JSON.parse(raw);
+    const entries = [];
+    let hadCorrupted = false;
+
+    parsed.forEach((item) => {
+      const normalized = normalizeAnalysisEntry(item);
+      if (normalized) {
+        entries.push(normalized);
+      } else {
+        hadCorrupted = true;
+      }
+    });
+
+    return { entries, hadCorrupted };
   } catch {
-    return fallback;
+    return { entries: [], hadCorrupted: true };
   }
 }
 
+function persistHistory(entries) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
+}
+
+export function getAnalysisHistoryState() {
+  return loadHistoryState();
+}
+
 export function getAnalysisHistory() {
-  const history = readJson(HISTORY_KEY, []);
-  return Array.isArray(history) ? history : [];
+  return loadHistoryState().entries;
 }
 
 export function getAnalysisById(id) {
@@ -53,15 +79,28 @@ export function getLatestAnalysis() {
 }
 
 export function saveAnalysisEntry(entry) {
+  const normalized = normalizeAnalysisEntry(entry);
+  if (!normalized) {
+    return;
+  }
+
   const history = getAnalysisHistory();
-  const nextHistory = [entry, ...history.filter((item) => item.id !== entry.id)].slice(0, 100);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(nextHistory));
-  localStorage.setItem(LATEST_ID_KEY, entry.id);
-  localStorage.setItem(SELECTED_ID_KEY, entry.id);
+  const nextHistory = [normalized, ...history.filter((item) => item.id !== normalized.id)].slice(0, 100);
+  persistHistory(nextHistory);
+  localStorage.setItem(LATEST_ID_KEY, normalized.id);
+  localStorage.setItem(SELECTED_ID_KEY, normalized.id);
 }
 
 export function updateAnalysisEntry(entryId, patch) {
   const history = getAnalysisHistory();
-  const nextHistory = history.map((entry) => (entry.id === entryId ? { ...entry, ...patch } : entry));
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(nextHistory));
+  const nextHistory = history.map((entry) => {
+    if (entry.id !== entryId) {
+      return entry;
+    }
+
+    const normalized = normalizeAnalysisEntry({ ...entry, ...patch });
+    return normalized || entry;
+  });
+
+  persistHistory(nextHistory);
 }

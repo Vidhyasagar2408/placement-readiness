@@ -1,5 +1,6 @@
-﻿import { ChartColumn, Code2, Video } from "lucide-react";
-import { Link } from "react-router-dom";
+﻿import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ChartColumn, Code2, Video } from "lucide-react";
 
 const features = [
   {
@@ -20,15 +21,63 @@ const features = [
 ];
 
 function LandingPage() {
+  const navigate = useNavigate();
+  const [company, setCompany] = useState("");
+  const [role, setRole] = useState("");
+  const [jdText, setJdText] = useState("");
+  const [warning, setWarning] = useState("");
+
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    if (jdText.trim().length < 200) {
+      setWarning("This JD is too short to analyze deeply. Paste full JD for better output.");
+      return;
+    }
+
+    setWarning("");
+    localStorage.setItem(
+      "prp_home_draft",
+      JSON.stringify({ company: company.trim(), role: role.trim(), jdText })
+    );
+    navigate("/app/practice");
+  }
+
   return (
     <div className="landing-page">
       <main className="landing-main">
         <section className="hero">
           <h1>Ace Your Placement</h1>
           <p>Practice, assess, and prepare for your dream job</p>
-          <Link to="/app" className="btn btn-primary" style={{ marginTop: "24px" }}>
-            Get Started
-          </Link>
+
+          <form className="home-analyze-form" onSubmit={handleSubmit}>
+            <div className="home-form-grid">
+              <input
+                type="text"
+                placeholder="Company (optional)"
+                value={company}
+                onChange={(event) => setCompany(event.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Role (optional)"
+                value={role}
+                onChange={(event) => setRole(event.target.value)}
+              />
+            </div>
+            <textarea
+              required
+              rows="7"
+              placeholder="Paste complete Job Description here (required)"
+              value={jdText}
+              onChange={(event) => setJdText(event.target.value)}
+            />
+            <p className="home-form-note">Minimum 200 characters for meaningful analysis.</p>
+            {warning ? <p className="home-warning">{warning}</p> : null}
+            <button type="submit" className="btn btn-primary">
+              Get Started
+            </button>
+          </form>
         </section>
 
         <section className="features-grid">

@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { analyzeJobDescription, calculateLiveReadinessScore } from "../lib/analysisEngine";
 import { saveAnalysisEntry } from "../lib/analysisStorage";
+import { normalizeExtractedSkills, flattenExtractedSkills } from "../lib/analysisSchema";
 import { buildCompanyIntel, buildRoundMapping } from "../lib/companyIntel";
 
 function makeId() {
@@ -10,31 +11,48 @@ function makeId() {
 
 function buildDefaultSkillConfidenceMap(extractedSkills) {
   const map = {};
-  extractedSkills.forEach((group) => {
-    group.skills.forEach((skill) => {
-      map[skill] = "practice";
-    });
+  flattenExtractedSkills(extractedSkills).forEach((skill) => {
+    map[skill] = "practice";
   });
   return map;
 }
 
-function flattenSkills(extractedSkills) {
-  const list = [];
-  (extractedSkills || []).forEach((group) => {
-    (group.skills || []).forEach((skill) => {
-      if (!list.includes(skill)) {
-        list.push(skill);
-      }
-    });
-  });
-  return list;
+function toChecklistSchema(checklist) {
+  return (checklist || []).map((round) => ({
+    roundTitle: round.round || "",
+    items: Array.isArray(round.items) ? round.items : [],
+  }));
+}
+
+function toPlan7DaysSchema(plan) {
+  return (plan || []).map((item) => ({
+    day: item.day || "",
+    focus: item.focus || "",
+    tasks: typeof item.tasks === "string" ? [item.tasks] : Array.isArray(item.tasks) ? item.tasks : [],
+  }));
 }
 
 function PracticePage() {
   const navigate = useNavigate();
-  const [company, setCompany] = useState("");
-  const [role, setRole] = useState("");
-  const [jdText, setJdText] = useState("");
+  const [draft] = useState(() => {
+    try {
+      const raw = localStorage.getItem("prp_home_draft");
+      if (!raw) {
+        return { company: "", role: "", jdText: "" };
+      }
+      const parsed = JSON.parse(raw);
+      return {
+        company: typeof parsed.company === "string" ? parsed.company : "",
+        role: typeof parsed.role === "string" ? parsed.role : "",
+        jdText: typeof parsed.jdText === "string" ? parsed.jdText : "",
+      };
+    } catch {
+      return { company: "", role: "", jdText: "" };
+    }
+  });
+  const [company, setCompany] = useState(draft.company);
+  const [role, setRole] = useState(draft.role);
+  const [jdText, setJdText] = useState(draft.jdText);
 
   const jdLength = jdText.length;
 
@@ -50,31 +68,37 @@ function PracticePage() {
     event.preventDefault();
 
     const analysis = analyzeJobDescription({ company, role, jdText });
-    const detectedSkills = flattenSkills(analysis.extractedSkills);
+    const extractedSkills = normalizeExtractedSkills(analysis.extractedSkills);
+    const detectedSkills = flattenExtractedSkills(extractedSkills);
     const companyTrimmed = company.trim();
     const companyIntel = companyTrimmed ? buildCompanyIntel(companyTrimmed) : null;
     const roundMapping = companyIntel ? buildRoundMapping(companyIntel, detectedSkills) : [];
-    const skillConfidenceMap = buildDefaultSkillConfidenceMap(analysis.extractedSkills);
-    const liveReadinessScore = calculateLiveReadinessScore(analysis.readinessScore, skillConfidenceMap);
+
+    const skillConfidenceMap = buildDefaultSkillConfidenceMap(extractedSkills);
+    const baseScore = analysis.readinessScore;
+    const finalScore = calculateLiveReadinessScore(baseScore, skillConfidenceMap);
+    const now = new Date().toISOString();
 
     const entry = {
       id: makeId(),
-      createdAt: new Date().toISOString(),
+      createdAt: now,
       company: companyTrimmed,
       role: role.trim(),
       jdText,
-      extractedSkills: analysis.extractedSkills,
-      plan: analysis.plan,
-      checklist: analysis.checklist,
-      questions: analysis.questions,
-      companyIntel,
+      extractedSkills,
       roundMapping,
-      baseReadinessScore: analysis.readinessScore,
-      readinessScore: liveReadinessScore,
+      checklist: toChecklistSchema(analysis.checklist),
+      plan7Days: toPlan7DaysSchema(analysis.plan),
+      questions: analysis.questions,
+      baseScore,
       skillConfidenceMap,
+      finalScore,
+      updatedAt: now,
+      companyIntel,
     };
 
     saveAnalysisEntry(entry);
+    localStorage.removeItem("prp_home_draft");
     navigate("/results");
   }
 
@@ -84,26 +108,28 @@ function PracticePage() {
       <p>Paste company details and JD to run offline skill extraction and preparation analysis.</p>
 
       <form className="analyzer-form" onSubmit={handleAnalyze}>
-        <div className="input-group">
-          <label htmlFor="company">Company</label>
-          <input
-            id="company"
-            type="text"
-            placeholder="e.g., Zoho"
-            value={company}
-            onChange={(event) => setCompany(event.target.value)}
-          />
-        </div>
+        <div className="analyzer-form-grid">
+          <div className="input-group">
+            <label htmlFor="company">Company</label>
+            <input
+              id="company"
+              type="text"
+              placeholder="e.g., Zoho"
+              value={company}
+              onChange={(event) => setCompany(event.target.value)}
+            />
+          </div>
 
-        <div className="input-group">
-          <label htmlFor="role">Role</label>
-          <input
-            id="role"
-            type="text"
-            placeholder="e.g., Software Engineer Intern"
-            value={role}
-            onChange={(event) => setRole(event.target.value)}
-          />
+          <div className="input-group">
+            <label htmlFor="role">Role</label>
+            <input
+              id="role"
+              type="text"
+              placeholder="e.g., Software Engineer Intern"
+              value={role}
+              onChange={(event) => setRole(event.target.value)}
+            />
+          </div>
         </div>
 
         <div className="input-group">

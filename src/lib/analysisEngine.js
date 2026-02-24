@@ -123,7 +123,7 @@ export function extractSkillsFromJD(jdText) {
 
   if (grouped.length === 0) {
     return {
-      groupedSkills: [{ category: "General", skills: ["General fresher stack"] }],
+      groupedSkills: [],
       matchedCategoryCount: 0,
       matchedSkillsFlat: [],
     };
@@ -373,9 +373,80 @@ export function calculateLiveReadinessScore(baseReadinessScore, skillConfidenceM
 
 export function analyzeJobDescription({ company, role, jdText }) {
   const extraction = extractSkillsFromJD(jdText);
-  const checklist = buildRoundChecklist(extraction.groupedSkills, extraction.matchedSkillsFlat);
-  const plan = buildSevenDayPlan(extraction.groupedSkills, extraction.matchedSkillsFlat);
-  const questions = buildLikelyQuestions(extraction.groupedSkills, extraction.matchedSkillsFlat);
+  const noSkillDetected = extraction.matchedSkillsFlat.length === 0;
+
+  const checklist = noSkillDetected
+    ? [
+        {
+          round: "Round 1: Aptitude / Basics",
+          items: [
+            "Revise communication fundamentals and clarity in responses.",
+            "Practice basic coding syntax and control flow questions.",
+            "Solve one timed aptitude set focused on logic and accuracy.",
+            "Prepare two concise project summaries with outcomes.",
+            "Practice explaining problem-solving approach step by step.",
+          ],
+        },
+        {
+          round: "Round 2: DSA + Core CS",
+          items: [
+            "Practice easy array and string problems for coding confidence.",
+            "Revise basic OOP and DBMS terminology used in interviews.",
+            "Practice complexity estimation for straightforward solutions.",
+            "Attempt one 45-minute coding session under timer.",
+            "Review mistakes and rewrite improved solutions.",
+          ],
+        },
+        {
+          round: "Round 3: Tech interview (projects + stack)",
+          items: [
+            "Prepare one strong project walkthrough from challenge to delivery.",
+            "Explain one technical decision and its trade-offs clearly.",
+            "Highlight practical problem-solving examples from your work.",
+            "Align resume bullets with measurable project outcomes.",
+            "Prepare questions on team workflow and engineering practices.",
+          ],
+        },
+        {
+          round: "Round 4: Managerial / HR",
+          items: [
+            "Prepare STAR stories for ownership and collaboration.",
+            "Practice concise introduction and role motivation.",
+            "Prepare answers on strengths, weak areas, and learning goals.",
+            "Practice conflict-resolution and teamwork examples.",
+            "Prepare final interviewer questions with thoughtful intent.",
+          ],
+        },
+      ]
+    : buildRoundChecklist(extraction.groupedSkills, extraction.matchedSkillsFlat);
+
+  const plan = noSkillDetected
+    ? [
+        { day: "Day 1", focus: "Basics + Core CS", tasks: "Revise communication and core CS terminology with summary notes." },
+        { day: "Day 2", focus: "Basics + Core CS", tasks: "Practice basic coding and solve foundational logic exercises." },
+        { day: "Day 3", focus: "DSA + coding practice", tasks: "Solve easy coding problems focusing on clean approach and explanation." },
+        { day: "Day 4", focus: "DSA + coding practice", tasks: "Attempt a timed session and analyze missed patterns." },
+        { day: "Day 5", focus: "Project + resume alignment", tasks: "Improve project bullets and prepare impact-oriented storytelling." },
+        { day: "Day 6", focus: "Mock interview questions", tasks: "Run one technical and one HR mock with feedback notes." },
+        { day: "Day 7", focus: "Revision + weak areas", tasks: "Revise weak areas and create final quick-revision sheet." },
+      ]
+    : buildSevenDayPlan(extraction.groupedSkills, extraction.matchedSkillsFlat);
+
+  const questions = noSkillDetected
+    ? [
+        "How do you structure your approach before starting a coding problem?",
+        "Describe a project where you solved an ambiguous technical issue.",
+        "How do you communicate trade-offs when multiple solutions are possible?",
+        "How do you ensure code quality when deadlines are tight?",
+        "What strategy do you follow to improve weak technical areas quickly?",
+        "How do you explain a technical concept to a non-technical stakeholder?",
+        "What did you improve recently in your project workflow and why?",
+        "How do you prioritize tasks when everything seems urgent?",
+        "Describe a situation where you learned from a failed implementation.",
+        "How would you prepare in one week for a placement interview cycle?",
+      ]
+    : buildLikelyQuestions(extraction.groupedSkills, extraction.matchedSkillsFlat);
+
   const readinessScore = calculateReadinessScore({
     matchedCategoryCount: extraction.matchedCategoryCount,
     company,

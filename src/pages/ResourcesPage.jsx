@@ -1,6 +1,6 @@
 ﻿import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAnalysisHistory, setSelectedAnalysisId } from "../lib/analysisStorage";
+import { getAnalysisHistoryState, setSelectedAnalysisId } from "../lib/analysisStorage";
 
 function formatDate(isoString) {
   try {
@@ -12,7 +12,8 @@ function formatDate(isoString) {
 
 function ResourcesPage() {
   const navigate = useNavigate();
-  const history = useMemo(() => getAnalysisHistory(), []);
+  const historyState = useMemo(() => getAnalysisHistoryState(), []);
+  const history = historyState.entries;
 
   function openResult(id) {
     setSelectedAnalysisId(id);
@@ -24,6 +25,10 @@ function ResourcesPage() {
       <h2>Resources</h2>
       <p>Analysis history is persisted locally. Click any entry to open its detailed results.</p>
 
+      {historyState.hadCorrupted ? (
+        <div className="empty-state">One saved entry couldn't be loaded. Create a new analysis.</div>
+      ) : null}
+
       {history.length === 0 ? (
         <div className="empty-state">No history yet. Run an analysis from Practice.</div>
       ) : (
@@ -33,7 +38,7 @@ function ResourcesPage() {
               <div className="history-meta">{formatDate(entry.createdAt)}</div>
               <div className="history-title">{entry.company || "Unknown Company"}</div>
               <div className="history-role">{entry.role || "Unspecified Role"}</div>
-              <div className="history-score">Score: {entry.readinessScore}/100</div>
+              <div className="history-score">Score: {entry.finalScore}/100</div>
             </button>
           ))}
         </div>

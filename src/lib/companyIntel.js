@@ -64,20 +64,24 @@ export function buildRoundMapping(companyIntel, detectedSkills) {
   if (enterprise && hasDSA) {
     return [
       {
-        title: "Round 1: Online Test (DSA + Aptitude)",
-        why: "Enterprise screening prioritizes speed, accuracy, and foundational reasoning at scale.",
+        roundTitle: "Round 1: Online Test (DSA + Aptitude)",
+        focusAreas: ["DSA", "Aptitude", "Problem Solving Speed"],
+        whyItMatters: "Enterprise screening prioritizes speed, accuracy, and foundational reasoning at scale.",
       },
       {
-        title: "Round 2: Technical (DSA + Core CS)",
-        why: "This validates depth in algorithmic thinking and engineering fundamentals.",
+        roundTitle: "Round 2: Technical (DSA + Core CS)",
+        focusAreas: ["DSA", "Core CS", "Complexity Analysis"],
+        whyItMatters: "This validates depth in algorithmic thinking and engineering fundamentals.",
       },
       {
-        title: "Round 3: Tech + Projects",
-        why: "Interviewers assess implementation ownership, trade-offs, and project impact.",
+        roundTitle: "Round 3: Tech + Projects",
+        focusAreas: ["Projects", "Stack Depth", "Trade-offs"],
+        whyItMatters: "Interviewers assess implementation ownership, trade-offs, and project impact.",
       },
       {
-        title: "Round 4: HR",
-        why: "Final fit evaluation checks communication, expectations, and long-term alignment.",
+        roundTitle: "Round 4: HR",
+        focusAreas: ["Communication", "Behavioral Fit", "Motivation"],
+        whyItMatters: "Final fit evaluation checks communication, expectations, and long-term alignment.",
       },
     ];
   }
@@ -85,16 +89,19 @@ export function buildRoundMapping(companyIntel, detectedSkills) {
   if (!enterprise && hasWebStack) {
     return [
       {
-        title: "Round 1: Practical Coding",
-        why: "Startup teams prioritize hands-on delivery and immediate coding effectiveness.",
+        roundTitle: "Round 1: Practical Coding",
+        focusAreas: ["Practical Coding", "Debugging", "Feature Delivery"],
+        whyItMatters: "Startup teams prioritize hands-on delivery and immediate coding effectiveness.",
       },
       {
-        title: "Round 2: System Discussion",
-        why: "You need to justify architecture decisions for real product constraints.",
+        roundTitle: "Round 2: System Discussion",
+        focusAreas: ["System Design", "API Thinking", "Scalability Basics"],
+        whyItMatters: "You need to justify architecture decisions for real product constraints.",
       },
       {
-        title: "Round 3: Culture Fit",
-        why: "Lean teams strongly evaluate ownership mindset and collaboration behavior.",
+        roundTitle: "Round 3: Culture Fit",
+        focusAreas: ["Ownership", "Communication", "Adaptability"],
+        whyItMatters: "Lean teams strongly evaluate ownership mindset and collaboration behavior.",
       },
     ];
   }
@@ -102,37 +109,43 @@ export function buildRoundMapping(companyIntel, detectedSkills) {
   if (enterprise) {
     return [
       {
-        title: "Round 1: Online Assessment",
-        why: "Standardized screening ensures consistent benchmark across candidates.",
+        roundTitle: "Round 1: Online Assessment",
+        focusAreas: ["Aptitude", "Coding Basics", "Reasoning"],
+        whyItMatters: "Standardized screening ensures consistent benchmark across candidates.",
       },
       {
-        title: "Round 2: Technical Fundamentals",
-        why: "Core CS and coding quality are evaluated for long-term engineering potential.",
+        roundTitle: "Round 2: Technical Fundamentals",
+        focusAreas: ["Core CS", "Coding Quality", "Problem Solving"],
+        whyItMatters: "Core CS and coding quality are evaluated for long-term engineering potential.",
       },
       {
-        title: "Round 3: Project Deep Dive",
-        why: "Interviewers test clarity, depth, and end-to-end thinking.",
+        roundTitle: "Round 3: Project Deep Dive",
+        focusAreas: ["Project Architecture", "Decision Quality", "Impact"],
+        whyItMatters: "Interviewers test clarity, depth, and end-to-end thinking.",
       },
       {
-        title: "Round 4: HR / Managerial",
-        why: "Final decision checks communication and team alignment.",
+        roundTitle: "Round 4: HR / Managerial",
+        focusAreas: ["Behavioral Fit", "Communication", "Role Alignment"],
+        whyItMatters: "Final decision checks communication and team alignment.",
       },
     ];
   }
 
   return [
     {
-      title: "Round 1: Practical Screening",
-      why: "Initial evaluation focuses on execution speed and usable problem solving.",
+      roundTitle: "Round 1: Practical Screening",
+      focusAreas: ["Problem Solving", "Coding Basics", "Execution"],
+      whyItMatters: "Initial evaluation focuses on execution speed and usable problem solving.",
     },
     {
-      title: "Round 2: Technical + Stack Depth",
-      why: "Panel checks whether your primary stack understanding can support production work.",
+      roundTitle: "Round 2: Technical + Stack Depth",
+      focusAreas: ["Stack Depth", "Implementation", "Trade-offs"],
+      whyItMatters: "Panel checks whether your primary stack understanding can support production work.",
     },
     {
-      title: "Round 3: Founder / Team Fit",
-      why: "Small teams value ownership, adaptability, and communication quality.",
+      roundTitle: "Round 3: Founder / Team Fit",
+      focusAreas: ["Ownership", "Collaboration", "Communication"],
+      whyItMatters: "Small teams value ownership, adaptability, and communication quality.",
     },
   ];
 }
-

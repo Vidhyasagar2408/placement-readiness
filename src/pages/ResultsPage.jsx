@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { calculateLiveReadinessScore } from "../lib/analysisEngine";
 import { buildCompanyIntel, buildRoundMapping } from "../lib/companyIntel";
+import { extractedSkillsToGroups, flattenExtractedSkills } from "../lib/analysisSchema";
 import {
   getAnalysisById,
   getLatestAnalysis,
@@ -28,18 +29,6 @@ function resolveAnalysis() {
   return getLatestAnalysis();
 }
 
-function flattenSkills(extractedSkills) {
-  const list = [];
-  (extractedSkills || []).forEach((group) => {
-    (group.skills || []).forEach((skill) => {
-      if (!list.includes(skill)) {
-        list.push(skill);
-      }
-    });
-  });
-  return list;
-}
-
 function ensureSkillConfidenceMap(skills, existingMap) {
   const next = { ...(existingMap || {}) };
   skills.forEach((skill) => {
@@ -52,12 +41,14 @@ function ensureSkillConfidenceMap(skills, existingMap) {
 
 function buildChecklistText(checklist) {
   return checklist
-    .map((round) => `${round.round}\n${round.items.map((item) => `- ${item}`).join("\n")}`)
+    .map((round) => `${round.roundTitle}\n${(round.items || []).map((item) => `- ${item}`).join("\n")}`)
     .join("\n\n");
 }
 
-function buildPlanText(plan) {
-  return plan.map((day) => `${day.day} - ${day.focus}\n${day.tasks}`).join("\n\n");
+function buildPlanText(plan7Days) {
+  return plan7Days
+    .map((day) => `${day.day} - ${day.focus}\n${(day.tasks || []).join("\n")}`)
+    .join("\n\n");
 }
 
 function buildQuestionsText(questions) {
@@ -68,16 +59,18 @@ function ResultsPage() {
   const [analysis] = useState(() => resolveAnalysis());
   const [copyState, setCopyState] = useState("");
 
-  const allSkills = useMemo(() => flattenSkills(analysis?.extractedSkills || []), [analysis]);
+  const allSkills = useMemo(() => flattenExtractedSkills(analysis?.extractedSkills || {}), [analysis]);
+  const skillGroups = useMemo(() => extractedSkillsToGroups(analysis?.extractedSkills || {}), [analysis]);
+
   const [skillConfidenceMap, setSkillConfidenceMap] = useState(() =>
     ensureSkillConfidenceMap(allSkills, analysis?.skillConfidenceMap)
   );
 
-  const baseReadinessScore = analysis?.baseReadinessScore ?? analysis?.readinessScore ?? 0;
+  const baseScore = analysis?.baseScore ?? 0;
 
-  const liveReadinessScore = useMemo(
-    () => calculateLiveReadinessScore(baseReadinessScore, skillConfidenceMap),
-    [baseReadinessScore, skillConfidenceMap]
+  const finalScore = useMemo(
+    () => calculateLiveReadinessScore(baseScore, skillConfidenceMap),
+    [baseScore, skillConfidenceMap]
   );
 
   const companyProvided = (analysis?.company || "").trim().length > 0;
@@ -120,13 +113,13 @@ function ResultsPage() {
     }
 
     updateAnalysisEntry(analysis.id, {
-      baseReadinessScore,
-      readinessScore: liveReadinessScore,
+      finalScore,
       skillConfidenceMap,
+      updatedAt: new Date().toISOString(),
       companyIntel,
       roundMapping,
     });
-  }, [analysis, baseReadinessScore, liveReadinessScore, skillConfidenceMap, companyIntel, roundMapping]);
+  }, [analysis, finalScore, skillConfidenceMap, companyIntel, roundMapping]);
 
   if (!analysis) {
     return (
@@ -164,7 +157,8 @@ function ResultsPage() {
       `Company: ${analysis.company || "Unknown Company"}`,
       `Role: ${analysis.role || "Unspecified Role"}`,
       `Created At: ${formatDate(analysis.createdAt)}`,
-      `Readiness Score: ${liveReadinessScore}/100`,
+      `Updated At: ${formatDate(analysis.updatedAt)}`,
+      `Readiness Score: ${finalScore}/100`,
       "",
       "Company Intel",
       companyIntel
@@ -173,19 +167,19 @@ function ResultsPage() {
       "",
       "Round Mapping",
       roundMapping.length > 0
-        ? roundMapping.map((round) => `${round.title}\nWhy: ${round.why}`).join("\n\n")
+        ? roundMapping
+            .map((round) => `${round.roundTitle}\nFocus: ${(round.focusAreas || []).join(", ")}\nWhy: ${round.whyItMatters}`)
+            .join("\n\n")
         : "Not available (company name missing).",
       "",
       "Key Skills Extracted",
-      ...(analysis.extractedSkills || []).map(
-        (group) => `${group.category}: ${(group.skills || []).join(", ") || "-"}`
-      ),
+      ...skillGroups.map((group) => `${group.category}: ${group.skills.join(", ") || "-"}`),
       "",
       "Round-wise Preparation Checklist",
       buildChecklistText(analysis.checklist || []),
       "",
       "7-day Plan",
-      buildPlanText(analysis.plan || []),
+      buildPlanText(analysis.plan7Days || []),
       "",
       "10 Likely Interview Questions",
       buildQuestionsText(analysis.questions || []),
@@ -215,7 +209,7 @@ function ResultsPage() {
         <p>
           {analysis.company || "Unknown Company"} | {analysis.role || "Unspecified Role"} | {formatDate(analysis.createdAt)}
         </p>
-        <div className="results-score">Readiness Score: {liveReadinessScore}/100</div>
+        <div className="results-score">Readiness Score: {finalScore}/100</div>
       </section>
 
       {companyProvided ? (
@@ -239,11 +233,14 @@ function ResultsPage() {
           <h3>Round Mapping</h3>
           <div className="timeline">
             {roundMapping.map((round) => (
-              <article key={round.title} className="timeline-item">
+              <article key={round.roundTitle} className="timeline-item">
                 <div className="timeline-dot" />
                 <div className="timeline-content">
-                  <h4>{round.title}</h4>
-                  <p><strong>Why this round matters:</strong> {round.why}</p>
+                  <h4>{round.roundTitle}</h4>
+                  {(round.focusAreas || []).length > 0 ? (
+                    <p><strong>Focus Areas:</strong> {round.focusAreas.join(", ")}</p>
+                  ) : null}
+                  <p><strong>Why this round matters:</strong> {round.whyItMatters}</p>
                 </div>
               </article>
             ))}
@@ -254,7 +251,7 @@ function ResultsPage() {
       <section className="page-panel">
         <h3>Key Skills Extracted</h3>
         <div className="skills-groups">
-          {analysis.extractedSkills.map((group) => (
+          {skillGroups.map((group) => (
             <article key={group.category} className="skill-group">
               <h4>{group.category}</h4>
               <div className="tag-row">
@@ -291,11 +288,11 @@ function ResultsPage() {
       <section className="page-panel">
         <h3>Round-wise Preparation Checklist</h3>
         <div className="round-list">
-          {analysis.checklist.map((round) => (
-            <article key={round.round} className="round-item">
-              <h4>{round.round}</h4>
+          {(analysis.checklist || []).map((round) => (
+            <article key={round.roundTitle} className="round-item">
+              <h4>{round.roundTitle}</h4>
               <ul>
-                {round.items.map((item) => (
+                {(round.items || []).map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
@@ -307,10 +304,14 @@ function ResultsPage() {
       <section className="page-panel">
         <h3>7-day Plan</h3>
         <div className="plan-list">
-          {analysis.plan.map((dayPlan) => (
+          {(analysis.plan7Days || []).map((dayPlan) => (
             <article key={dayPlan.day} className="plan-item">
               <h4>{dayPlan.day}: {dayPlan.focus}</h4>
-              <p>{dayPlan.tasks}</p>
+              <ul>
+                {(dayPlan.tasks || []).map((task) => (
+                  <li key={task}>{task}</li>
+                ))}
+              </ul>
             </article>
           ))}
         </div>
@@ -319,7 +320,7 @@ function ResultsPage() {
       <section className="page-panel">
         <h3>10 Likely Interview Questions</h3>
         <ol className="question-list">
-          {analysis.questions.map((question) => (
+          {(analysis.questions || []).map((question) => (
             <li key={question}>{question}</li>
           ))}
         </ol>
@@ -328,13 +329,13 @@ function ResultsPage() {
       <section className="page-panel">
         <h3>Export Tools</h3>
         <div className="results-actions">
-          <button type="button" className="btn btn-secondary" onClick={() => copyText("7-day plan", buildPlanText(analysis.plan))}>
+          <button type="button" className="btn btn-secondary" onClick={() => copyText("7-day plan", buildPlanText(analysis.plan7Days || []))}>
             Copy 7-day plan
           </button>
-          <button type="button" className="btn btn-secondary" onClick={() => copyText("Round checklist", buildChecklistText(analysis.checklist))}>
+          <button type="button" className="btn btn-secondary" onClick={() => copyText("Round checklist", buildChecklistText(analysis.checklist || []))}>
             Copy round checklist
           </button>
-          <button type="button" className="btn btn-secondary" onClick={() => copyText("10 questions", buildQuestionsText(analysis.questions))}>
+          <button type="button" className="btn btn-secondary" onClick={() => copyText("10 questions", buildQuestionsText(analysis.questions || []))}>
             Copy 10 questions
           </button>
           <button type="button" className="btn btn-primary" onClick={downloadTxt}>

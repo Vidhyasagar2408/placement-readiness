@@ -6,11 +6,13 @@ import PracticePage from "./pages/PracticePage";
 import AssessmentsPage from "./pages/AssessmentsPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import ProfilePage from "./pages/ProfilePage";
+import ResultsPage from "./pages/ResultsPage";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/results" element={<ResultsPage />} />
       <Route path="/app" element={<DashboardLayout />}>
         <Route index element={<DashboardPage />} />
         <Route path="practice" element={<PracticePage />} />

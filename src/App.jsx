@@ -7,12 +7,16 @@ import AssessmentsPage from "./pages/AssessmentsPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import ProfilePage from "./pages/ProfilePage";
 import ResultsPage from "./pages/ResultsPage";
+import TestChecklistPage from "./pages/TestChecklistPage";
+import ShipPage from "./pages/ShipPage";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/results" element={<ResultsPage />} />
+      <Route path="/prp/07-test" element={<TestChecklistPage />} />
+      <Route path="/prp/08-ship" element={<ShipPage />} />
       <Route path="/app" element={<DashboardLayout />}>
         <Route index element={<DashboardPage />} />
         <Route path="practice" element={<PracticePage />} />

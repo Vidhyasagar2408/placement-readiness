@@ -789,3 +789,31 @@ p {
     justify-self: stretch;
   }
 }
+
+.test-list {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.test-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: var(--space-16);
+  border: var(--border);
+  border-radius: var(--radius);
+  background: #fcfcfd;
+  padding: var(--space-16);
+}
+
+.test-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 4px;
+  accent-color: var(--accent);
+}
+
+.test-item-content {
+  display: grid;
+  gap: var(--space-8);
+}

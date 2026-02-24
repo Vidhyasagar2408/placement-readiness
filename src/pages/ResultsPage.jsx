@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { calculateLiveReadinessScore } from "../lib/analysisEngine";
+import { buildCompanyIntel, buildRoundMapping } from "../lib/companyIntel";
 import {
   getAnalysisById,
   getLatestAnalysis,
@@ -79,6 +80,40 @@ function ResultsPage() {
     [baseReadinessScore, skillConfidenceMap]
   );
 
+  const companyProvided = (analysis?.company || "").trim().length > 0;
+
+  const companyIntel = useMemo(() => {
+    if (!analysis) {
+      return null;
+    }
+
+    if (analysis.companyIntel) {
+      return analysis.companyIntel;
+    }
+
+    if (!companyProvided) {
+      return null;
+    }
+
+    return buildCompanyIntel(analysis.company);
+  }, [analysis, companyProvided]);
+
+  const roundMapping = useMemo(() => {
+    if (!analysis) {
+      return [];
+    }
+
+    if (analysis.roundMapping && analysis.roundMapping.length > 0) {
+      return analysis.roundMapping;
+    }
+
+    if (!companyIntel) {
+      return [];
+    }
+
+    return buildRoundMapping(companyIntel, allSkills);
+  }, [analysis, companyIntel, allSkills]);
+
   useEffect(() => {
     if (!analysis?.id) {
       return;
@@ -88,8 +123,10 @@ function ResultsPage() {
       baseReadinessScore,
       readinessScore: liveReadinessScore,
       skillConfidenceMap,
+      companyIntel,
+      roundMapping,
     });
-  }, [analysis, baseReadinessScore, liveReadinessScore, skillConfidenceMap]);
+  }, [analysis, baseReadinessScore, liveReadinessScore, skillConfidenceMap, companyIntel, roundMapping]);
 
   if (!analysis) {
     return (
@@ -129,6 +166,16 @@ function ResultsPage() {
       `Created At: ${formatDate(analysis.createdAt)}`,
       `Readiness Score: ${liveReadinessScore}/100`,
       "",
+      "Company Intel",
+      companyIntel
+        ? `Name: ${companyIntel.companyName}\nIndustry: ${companyIntel.industry}\nSize: ${companyIntel.sizeCategory}\nTypical Hiring Focus: ${companyIntel.hiringFocus}`
+        : "Not available (company name missing).",
+      "",
+      "Round Mapping",
+      roundMapping.length > 0
+        ? roundMapping.map((round) => `${round.title}\nWhy: ${round.why}`).join("\n\n")
+        : "Not available (company name missing).",
+      "",
       "Key Skills Extracted",
       ...(analysis.extractedSkills || []).map(
         (group) => `${group.category}: ${(group.skills || []).join(", ") || "-"}`
@@ -146,6 +193,8 @@ function ResultsPage() {
       "Action Next",
       `Weak Skills: ${topWeakSkills.length > 0 ? topWeakSkills.join(", ") : "None"}`,
       "Start Day 1 plan now.",
+      "",
+      "Demo Mode: Company intel generated heuristically.",
     ].join("\n");
 
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
@@ -168,6 +217,39 @@ function ResultsPage() {
         </p>
         <div className="results-score">Readiness Score: {liveReadinessScore}/100</div>
       </section>
+
+      {companyProvided ? (
+        <section className="page-panel company-intel-panel">
+          <h3>Company Intel</h3>
+          <div className="intel-grid">
+            <div><strong>Company:</strong> {companyIntel.companyName}</div>
+            <div><strong>Industry:</strong> {companyIntel.industry}</div>
+            <div><strong>Estimated Size:</strong> {companyIntel.sizeCategory}</div>
+          </div>
+          <div className="intel-focus">
+            <strong>Typical Hiring Focus</strong>
+            <p>{companyIntel.hiringFocus}</p>
+          </div>
+          <p className="muted-text">Demo Mode: Company intel generated heuristically.</p>
+        </section>
+      ) : null}
+
+      {companyProvided ? (
+        <section className="page-panel">
+          <h3>Round Mapping</h3>
+          <div className="timeline">
+            {roundMapping.map((round) => (
+              <article key={round.title} className="timeline-item">
+                <div className="timeline-dot" />
+                <div className="timeline-content">
+                  <h4>{round.title}</h4>
+                  <p><strong>Why this round matters:</strong> {round.why}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="page-panel">
         <h3>Key Skills Extracted</h3>

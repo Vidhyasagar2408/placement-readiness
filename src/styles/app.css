@@ -553,3 +553,69 @@ p {
   border-color: rgba(79, 70, 229, 0.35);
   background: #f8f7ff;
 }
+
+.company-intel-panel {
+  border-color: rgba(79, 70, 229, 0.3);
+  background: #f8f7ff;
+}
+
+.intel-grid {
+  display: grid;
+  gap: var(--space-8);
+  color: var(--text);
+}
+
+.intel-focus {
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-16);
+  background: #ffffff;
+  display: grid;
+  gap: var(--space-8);
+}
+
+.timeline {
+  position: relative;
+  display: grid;
+  gap: var(--space-16);
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: rgba(79, 70, 229, 0.2);
+}
+
+.timeline-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: var(--space-16);
+  align-items: start;
+}
+
+.timeline-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  margin-top: 4px;
+}
+
+.timeline-content {
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-16);
+  display: grid;
+  gap: var(--space-8);
+}
+
+.timeline-content h4 {
+  margin: 0;
+  font-size: 20px;
+}

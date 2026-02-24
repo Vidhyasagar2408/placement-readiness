@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { analyzeJobDescription, calculateLiveReadinessScore } from "../lib/analysisEngine";
 import { saveAnalysisEntry } from "../lib/analysisStorage";
+import { buildCompanyIntel, buildRoundMapping } from "../lib/companyIntel";
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -15,6 +16,18 @@ function buildDefaultSkillConfidenceMap(extractedSkills) {
     });
   });
   return map;
+}
+
+function flattenSkills(extractedSkills) {
+  const list = [];
+  (extractedSkills || []).forEach((group) => {
+    (group.skills || []).forEach((skill) => {
+      if (!list.includes(skill)) {
+        list.push(skill);
+      }
+    });
+  });
+  return list;
 }
 
 function PracticePage() {
@@ -37,19 +50,25 @@ function PracticePage() {
     event.preventDefault();
 
     const analysis = analyzeJobDescription({ company, role, jdText });
+    const detectedSkills = flattenSkills(analysis.extractedSkills);
+    const companyTrimmed = company.trim();
+    const companyIntel = companyTrimmed ? buildCompanyIntel(companyTrimmed) : null;
+    const roundMapping = companyIntel ? buildRoundMapping(companyIntel, detectedSkills) : [];
     const skillConfidenceMap = buildDefaultSkillConfidenceMap(analysis.extractedSkills);
     const liveReadinessScore = calculateLiveReadinessScore(analysis.readinessScore, skillConfidenceMap);
 
     const entry = {
       id: makeId(),
       createdAt: new Date().toISOString(),
-      company: company.trim(),
+      company: companyTrimmed,
       role: role.trim(),
       jdText,
       extractedSkills: analysis.extractedSkills,
       plan: analysis.plan,
       checklist: analysis.checklist,
       questions: analysis.questions,
+      companyIntel,
+      roundMapping,
       baseReadinessScore: analysis.readinessScore,
       readinessScore: liveReadinessScore,
       skillConfidenceMap,

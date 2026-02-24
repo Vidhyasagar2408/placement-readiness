@@ -1,0 +1,14 @@
+﻿:root {
+  --bg: #F7F6F3;
+  --text: #111111;
+  --accent: #8B0000;
+  --success: #5F7A5A;
+  --space-8: 8px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-40: 40px;
+  --space-64: 64px;
+  --radius: 8px;
+  --border: 1px solid rgba(17, 17, 17, 0.18);
+  --transition: 180ms ease-in-out;
+}

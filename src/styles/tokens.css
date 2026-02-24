@@ -1,8 +1,11 @@
 ﻿:root {
-  --bg: #F7F6F3;
+  --bg: #f7f6f3;
+  --surface: #ffffff;
   --text: #111111;
-  --accent: #8B0000;
-  --success: #5F7A5A;
+  --muted: #475569;
+  --accent: hsl(245 58% 51%);
+  --accent-soft: hsl(245 58% 51% / 0.12);
+  --success: #5f7a5a;
   --space-8: 8px;
   --space-16: 16px;
   --space-24: 24px;

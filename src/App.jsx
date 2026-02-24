@@ -1,23 +1,25 @@
-﻿import TopBar from "./components/layout/TopBar";
-import ContextHeader from "./components/layout/ContextHeader";
-import PrimaryWorkspace from "./components/workspace/PrimaryWorkspace";
-import SecondaryPanel from "./components/workspace/SecondaryPanel";
-import ProofFooter from "./components/layout/ProofFooter";
+﻿import { Navigate, Route, Routes } from "react-router-dom";
+import DashboardLayout from "./layouts/DashboardLayout";
+import LandingPage from "./pages/LandingPage";
+import DashboardPage from "./pages/DashboardPage";
+import PracticePage from "./pages/PracticePage";
+import AssessmentsPage from "./pages/AssessmentsPage";
+import ResourcesPage from "./pages/ResourcesPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   return (
-    <div className="app-shell">
-      <TopBar projectName="KodNest Premium Build System" currentStep={1} totalSteps={4} status="Not Started" />
-      <ContextHeader
-        title="Build with deliberate quality and measurable proof."
-        subtitle="Define the current step clearly, execute it in sequence, and record evidence before moving forward."
-      />
-      <main className="workspace-grid">
-        <PrimaryWorkspace />
-        <SecondaryPanel />
-      </main>
-      <ProofFooter />
-    </div>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/app" element={<DashboardLayout />}>
+        <Route index element={<DashboardPage />} />
+        <Route path="practice" element={<PracticePage />} />
+        <Route path="assessments" element={<AssessmentsPage />} />
+        <Route path="resources" element={<ResourcesPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
